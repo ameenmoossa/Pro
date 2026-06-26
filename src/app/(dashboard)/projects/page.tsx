@@ -51,7 +51,7 @@ export default function ProjectsPage() {
     setIsModalOpen(true);
   };
 
-  const projects = data?.data || [];
+  const projects = Array.isArray(data) ? data : [];
 
   return (
     <div className="space-y-6">

@@ -2,7 +2,7 @@ import { api } from "@/lib/axios";
 import { User, PaginatedResponse } from "@/types";
 
 export const usersService = {
-  getUsers: async (params?: any): Promise<PaginatedResponse<User>> => {
+  getUsers: async (params?: any): Promise<User[]> => {
     const res = await api.get("/users", { params });
     return res.data;
   },

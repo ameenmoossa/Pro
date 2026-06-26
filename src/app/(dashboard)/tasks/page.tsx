@@ -51,7 +51,7 @@ export default function TasksPage() {
     setIsModalOpen(true);
   };
 
-  const tasks = data?.data || [];
+  const tasks = Array.isArray(data) ? data : [];
 
   return (
     <div className="space-y-6">

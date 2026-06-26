@@ -51,7 +51,7 @@ export default function UsersPage() {
     setIsModalOpen(true);
   };
 
-  const users = data?.data || [];
+  const users = Array.isArray(data) ? data : [];
 
   return (
     <div className="space-y-6">
