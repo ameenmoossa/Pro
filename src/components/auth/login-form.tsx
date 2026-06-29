@@ -43,15 +43,21 @@ export function LoginForm() {
 
   const loginMutation = useMutation({
     mutationFn: authService.login,
+    onMutate: (vars) => {
+      console.log("[login] mutation onMutate", vars);
+    },
     onSuccess: (data) => {
+      console.log("[login] onSuccess", data);
       localStorage.setItem("token", data.token);
       setUser(data.user);
       toast.success("Welcome back!", {
         description: "You have successfully logged in.",
       });
+      console.log("[login] navigating to /dashboard");
       router.push("/dashboard");
     },
     onError: (error: any) => {
+      console.log("[login] onError", error);
       toast.error("Login Failed", {
         description: error?.response?.data?.message || "Invalid credentials. Please try again.",
       });
@@ -59,6 +65,7 @@ export function LoginForm() {
   });
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
+    console.log("[login] form submitted", values);
     loginMutation.mutate(values);
   }
 

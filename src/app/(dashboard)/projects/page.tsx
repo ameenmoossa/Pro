@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { projectsService } from "@/services/projects";
 import { ProjectCard } from "@/components/projects/project-card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 export default function ProjectsPage() {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const queryFromUrl = searchParams.get("search") || "";
+  const [search, setSearch] = useState(queryFromUrl);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const queryClient = useQueryClient();
@@ -51,6 +56,10 @@ export default function ProjectsPage() {
     setIsModalOpen(true);
   };
 
+  useEffect(() => {
+    setSearch(queryFromUrl);
+  }, [queryFromUrl]);
+
   const projects = Array.isArray(data) ? data : [];
 
   return (
@@ -71,7 +80,12 @@ export default function ProjectsPage() {
           <Input 
             placeholder="Search projects..." 
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearch(value);
+              const queryString = value ? `?search=${encodeURIComponent(value)}` : "";
+              router.replace(`${pathname}${queryString}`);
+            }}
             className="pl-8 bg-background"
           />
         </div>

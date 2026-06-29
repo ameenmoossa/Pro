@@ -1,20 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { tasksService } from "@/services/tasks";
+import { usersService } from "@/services/users";
 import { TaskTable } from "@/components/tasks/task-table";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, ListTodo } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TaskModal } from "@/components/tasks/task-modal";
-import { Task } from "@/types";
+import { Task, User } from "@/types";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 export default function TasksPage() {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const queryFromUrl = searchParams.get("search") || "";
+  const [search, setSearch] = useState(queryFromUrl);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const queryClient = useQueryClient();
@@ -22,6 +28,11 @@ export default function TasksPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["tasks", search],
     queryFn: () => tasksService.getTasks({ search }),
+  });
+
+  const { data: usersData } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => usersService.getUsers(),
   });
 
   const deleteMutation = useMutation({
@@ -51,7 +62,21 @@ export default function TasksPage() {
     setIsModalOpen(true);
   };
 
-  const tasks = Array.isArray(data) ? data : [];
+  useEffect(() => {
+    setSearch(queryFromUrl);
+  }, [queryFromUrl]);
+
+  const users = Array.isArray(usersData) ? usersData : [];
+  const tasks = useMemo(() => {
+    const rawTasks: Task[] = Array.isArray(data) ? data : [];
+    return rawTasks.map((task) => {
+      const assigneeId = task.assigneeId ?? (task as any).assignee_id;
+      return {
+        ...task,
+        assignee: users.find((user) => user.id === assigneeId) || task.assignee,
+      };
+    });
+  }, [data, users]);
 
   return (
     <div className="space-y-6">
@@ -71,7 +96,12 @@ export default function TasksPage() {
           <Input 
             placeholder="Search tasks..." 
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearch(value);
+              const queryString = value ? `?search=${encodeURIComponent(value)}` : "";
+              router.replace(`${pathname}${queryString}`);
+            }}
             className="pl-8 bg-background"
           />
         </div>

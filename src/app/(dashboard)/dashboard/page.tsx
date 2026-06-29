@@ -34,38 +34,49 @@ export default function DashboardPage() {
 
   const isLoading = isLoadingProjects || isLoadingTasks || isLoadingUsers;
 
+  const tasks = Array.isArray(tasksData) ? tasksData : [];
+  const projects = Array.isArray(projectsData) ? projectsData : [];
+  const users = Array.isArray(usersData) ? usersData : [];
+  const tasksWithAssignee = tasks.map((task: any) => {
+    const assigneeId = task.assigneeId ?? task.assignee_id;
+    return {
+      ...task,
+      assignee: users.find((user) => user.id === assigneeId) || task.assignee,
+    };
+  });
+
   const stats = [
     {
       title: "Total Projects",
-      value: projectsData?.total || projectsData?.data?.length || 0,
+      value: projects.length,
       icon: Briefcase,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
     {
       title: "Total Tasks",
-      value: tasksData?.total || tasksData?.data?.length || 0,
+      value: tasks.length,
       icon: ListTodo,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
     {
       title: "Completed Tasks",
-      value: tasksData?.data?.filter((t: any) => t.status === "DONE").length || 0,
+      value: tasks.filter((t: any) => t.status === "DONE").length,
       icon: CheckCircle2,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
     {
       title: "Pending Tasks",
-      value: tasksData?.data?.filter((t: any) => t.status !== "DONE").length || 0,
+      value: tasks.filter((t: any) => t.status !== "DONE").length,
       icon: CircleDashed,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
     },
     {
       title: "Developers",
-      value: usersData?.total || usersData?.data?.length || 0,
+      value: users.length,
       icon: Users,
       color: "text-pink-500",
       bgColor: "bg-pink-500/10",
@@ -131,9 +142,9 @@ export default function DashboardPage() {
                 <div className="p-6 space-y-4">
                   {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
                 </div>
-              ) : projectsData?.data?.length ? (
+              ) : projects.length ? (
                 <div className="divide-y divide-border/40">
-                  {projectsData.data.slice(0, 5).map((project: any) => (
+                  {projects.slice(0, 5).map((project: any) => (
                     <div key={project.id} className="p-4 hover:bg-muted/10 transition-colors flex items-center justify-between">
                       <div>
                         <h4 className="font-semibold text-base">{project.name}</h4>
@@ -175,18 +186,20 @@ export default function DashboardPage() {
                 <div className="p-6 space-y-4">
                   {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
                 </div>
-              ) : tasksData?.data?.length ? (
+              ) : tasksWithAssignee.length ? (
                 <div className="divide-y divide-border/40">
-                  {tasksData.data.slice(0, 5).map((task: any) => (
-                    <div key={task.id} className="p-4 hover:bg-muted/10 transition-colors flex items-center justify-between">
+                  {tasksWithAssignee.slice(0, 5).map((task: any) => (
+                    <div key={task.id} className="p-4 hover:bg-muted/10 transition-colors flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <h4 className="font-semibold text-base line-clamp-1">{task.title}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`w-2 h-2 rounded-full ${task.priority === 'HIGH' ? 'bg-destructive' : task.priority === 'MEDIUM' ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                          <span className="text-xs text-muted-foreground">{task.priority} Priority</span>
+                        <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          <span className={`inline-flex h-2 w-2 rounded-full ${task.priority === 'HIGH' ? 'bg-destructive' : task.priority === 'MEDIUM' ? 'bg-orange-500' : 'bg-blue-500'}`} />
+                          <span>{task.priority} Priority</span>
+                          <span>•</span>
+                          <span>Assigned to {task.assignee?.name || 'Unassigned'}</span>
                         </div>
                       </div>
-                      <Badge variant={task.status === 'DONE' ? 'default' : 'secondary'} className="ml-4 shrink-0">
+                      <Badge variant={task.status === 'DONE' ? 'default' : 'secondary'} className="ml-4 shrink-0 mt-2 sm:mt-0">
                         {task.status.replace('_', ' ')}
                       </Badge>
                     </div>

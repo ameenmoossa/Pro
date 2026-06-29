@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Search, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +15,31 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export function Topbar() {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const [query, setQuery] = useState(initialSearch);
+
+  useEffect(() => {
+    setQuery(initialSearch);
+  }, [initialSearch]);
+
+  const setSearchQuery = (value: string) => {
+    setQuery(value);
+    const queryString = value ? `?search=${encodeURIComponent(value)}` : "";
+    let targetPath = pathname;
+
+    if (!pathname.startsWith("/projects") && !pathname.startsWith("/tasks") && !pathname.startsWith("/users")) {
+      targetPath = "/tasks";
+    }
+
+    router.replace(`${targetPath}${queryString}`);
+  };
 
   const handleLogout = () => {
     logout();
@@ -35,6 +56,8 @@ export function Topbar() {
             <Input
               type="search"
               placeholder="Search..."
+              value={query}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px] rounded-full bg-muted/50 transition-colors focus-visible:bg-background"
             />
           </div>

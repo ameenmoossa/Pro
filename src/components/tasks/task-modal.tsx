@@ -81,8 +81,13 @@ export function TaskModal({
       toast.success(`Task ${isEditing ? "updated" : "created"} successfully`);
       onClose();
     },
-    onError: () => {
-      toast.error(`Failed to ${isEditing ? "update" : "create"} task`);
+    onError: (error: any) => {
+      console.error("Task mutation error", error);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        `Failed to ${isEditing ? "update" : "create"} task`;
+      toast.error(message);
     },
   });
 
@@ -186,7 +191,7 @@ export function TaskModal({
                       className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     >
                       <option value="">Select a project...</option>
-                      {projectsData?.data?.map((p: any) => (
+                      {projectsData?.map((p: any) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
@@ -208,7 +213,7 @@ export function TaskModal({
                       className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     >
                       <option value="">Unassigned</option>
-                      {usersData?.data?.map((u: any) => (
+                      {usersData?.map((u: any) => (
                         <option key={u.id} value={u.id}>{u.name}</option>
                       ))}
                     </select>
